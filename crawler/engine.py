@@ -63,6 +63,12 @@ class CrawlerEngine:
             past_visited = self.storage.load_visited_urls()
             self.visited.add_bulk(past_visited)
 
+            # Hydrate parent-child relationships into memory registry
+            all_parents = self.storage.load_all_parents()
+            for child_url, p_list in all_parents.items():
+                for p in p_list:
+                    self.visited.record_parent(child_url, p)
+
             pending_items = self.storage.load_pending_urls()
             for item in pending_items:
                 if len(item) == 2:
@@ -70,6 +76,8 @@ class CrawlerEngine:
                     parent_url = None
                 else:
                     url, depth, parent_url = item
+                if parent_url:
+                    self.visited.record_parent(url, parent_url)
                 self.queue.put((url, depth, parent_url))
 
             crawled_count, pending_count = self.storage.get_stats()

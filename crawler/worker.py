@@ -112,9 +112,12 @@ class WorkerThread(threading.Thread):
                     links_to_crawl = internal_links if self.config.same_domain_only else internal_links.union(external_links)
 
                     for child_url in links_to_crawl:
-                        # Atomic Check-Then-Act to eliminate race conditions and track parent
+                        # Atomic Check-Then-Act to eliminate race conditions and track all parents
                         if self.visited.check_and_add(child_url, parent_url=url):
                             new_tasks.append((child_url, depth + 1, url))
+                        else:
+                            # Record relationship in storage even if already visited/queued (multiple parents)
+                            self.storage.record_parent_relationship(child_url, url)
 
                     if new_tasks:
                         # Persist newly discovered URLs with parent relationships

@@ -35,8 +35,16 @@ class StructureAnalyzer:
         self.title_map: Dict[str, str] = {
             r["url"]: (r.get("title") or clean_title(None, r["url"])) for r in records
         }
+        self.all_parents_map: Dict[str, List[str]] = {
+            r["url"]: r.get("all_parents", ([r["parent_url"]] if r.get("parent_url") else []))
+            for r in records
+        }
         self.children_map: Dict[str, List[str]] = {}
         self._build_hierarchy()
+
+    def get_all_parents(self, url: str) -> List[str]:
+        """Returns all discovered parent URLs for the specified page URL."""
+        return list(self.all_parents_map.get(url, []))
 
     def _build_hierarchy(self) -> None:
         """Constructs parent -> children mapping based on discovered links."""
@@ -86,7 +94,7 @@ class StructureAnalyzer:
     def generate_structure_table(self) -> str:
         """
         Renders the required terminal table:
-        Depth | Page | Parent | Status | HTTP | URL
+        Depth | Page Title | Parent | Status | HTTP | URL
         """
         ordered_records = self.get_hierarchical_order()
         if not ordered_records:
@@ -112,28 +120,21 @@ class StructureAnalyzer:
             })
 
         # Calculate dynamic column widths with safe limits for terminal readability
-        depth_w = max(5, max(len(row["depth"]) for row in rows))
-        page_w = min(25, max(15, max(len(row["page"]) for row in rows)))
-        parent_w = min(22, max(15, max(len(row["parent"]) for row in rows)))
-        status_w = max(11, max(len(row["status"]) for row in rows))
-        http_w = max(4, max(len(row["http"]) for row in rows))
+        depth_w = max(len("Depth"), max(len(row["depth"]) for row in rows))
+        page_w = min(30, max(len("Page Title"), max(len(row["page"]) for row in rows)))
+        parent_w = min(25, max(len("Parent"), max(len(row["parent"]) for row in rows)))
+        status_w = max(len("Status"), max(len(row["status"]) for row in rows))
+        http_w = max(len("HTTP"), max(len(row["http"]) for row in rows))
 
-        total_width = max(100, depth_w + page_w + parent_w + status_w + http_w + 35)
+        header_str = f"{'Depth':<{depth_w}} | {'Page Title':<{page_w}} | {'Parent':<{parent_w}} | {'Status':<{status_w}} | {'HTTP':<{http_w}} | URL"
+        divider_prefix = f"{'-' * depth_w}-+-{'-' * page_w}-+-{'-' * parent_w}-+-{'-' * status_w}-+-{'-' * http_w}-+-"
 
-        lines = [
-            "=" * total_width,
-            "WEBSITE STRUCTURE".center(total_width),
-            "=" * total_width,
-            "",
-            f"{'Depth':<{depth_w}} | {'Page':<{page_w}} | {'Parent':<{parent_w}} | {'Status':<{status_w}} | {'HTTP':<{http_w}} | URL",
-            f"{'-' * depth_w}-+-{'-' * page_w}-+-{'-' * parent_w}-+-{'-' * status_w}-+-{'-' * http_w}-+-{'-' * 40}",
-        ]
-
+        body_lines = []
         for row in rows:
             p_display = row["page"] if len(row["page"]) <= page_w else row["page"][:page_w - 3] + "..."
             par_display = row["parent"] if len(row["parent"]) <= parent_w else row["parent"][:parent_w - 3] + "..."
 
-            lines.append(
+            body_lines.append(
                 f"{row['depth']:<{depth_w}} | "
                 f"{p_display:<{page_w}} | "
                 f"{par_display:<{parent_w}} | "
@@ -142,7 +143,22 @@ class StructureAnalyzer:
                 f"{row['url']}"
             )
 
-        lines.append("=" * total_width)
+        max_row_len = max(len(header_str), max((len(line) for line in body_lines), default=80))
+        total_width = max(111, max_row_len)
+        divider_url_len = max(42, total_width - len(divider_prefix))
+        divider_str = divider_prefix + ("-" * divider_url_len)
+        banner_width = max(total_width, len(divider_str))
+
+        lines = [
+            "=" * banner_width,
+            "WEBSITE STRUCTURE".center(banner_width),
+            "=" * banner_width,
+            "",
+            header_str,
+            divider_str,
+        ]
+        lines.extend(body_lines)
+        lines.append("=" * banner_width)
         return "\n".join(lines)
 
     def generate_crawl_details_table(self) -> str:
@@ -261,6 +277,7 @@ class StructureAnalyzer:
                 "depth": rec.get("depth", 0),
                 "status": rec.get("status", "Completed"),
                 "http_status": rec.get("http_status", 200),
+                "all_parents": self.get_all_parents(rec.get("url", "")),
                 "children": children_nodes,
             }
 
@@ -293,12 +310,21 @@ class StructureAnalyzer:
             f.write("\n")
         paths["txt"] = txt_path
 
-        # 2. website_structure.csv
+        # 2. website_structure.csv (includes all 8 blueprint fields)
         csv_path = os.path.join(output_dir, "website_structure.csv")
         ordered_records = self.get_hierarchical_order()
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
-            writer.writerow(["Depth", "Page Title", "Parent", "URL", "Status", "HTTP Status Code"])
+            writer.writerow([
+                "Depth",
+                "Page Title",
+                "Parent",
+                "URL",
+                "Status",
+                "HTTP Status Code",
+                "Response Time",
+                "Links Found",
+            ])
             for r in ordered_records:
                 parent_url = r.get("parent_url")
                 parent_title = self.title_map.get(parent_url, "—") if parent_url else "—"
@@ -309,6 +335,8 @@ class StructureAnalyzer:
                     r.get("url", ""),
                     r.get("status") or "Completed",
                     r.get("http_status") or 0,
+                    f"{r.get('response_time', 0.0):.2f}s",
+                    r.get("links_found", 0),
                 ])
         paths["structure_csv"] = csv_path
 

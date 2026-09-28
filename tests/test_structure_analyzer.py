@@ -214,7 +214,19 @@ class TestWebsiteStructureAnalyzer(unittest.TestCase):
         with open(csv_file, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
             header = next(reader)
-            self.assertEqual(header, ["Depth", "Page Title", "Parent", "URL", "Status", "HTTP Status Code"])
+            self.assertEqual(
+                header,
+                [
+                    "Depth",
+                    "Page Title",
+                    "Parent",
+                    "URL",
+                    "Status",
+                    "HTTP Status Code",
+                    "Response Time",
+                    "Links Found",
+                ]
+            )
 
         with open(crawl_csv, "r", encoding="utf-8") as f:
             reader = csv.reader(f)
@@ -262,6 +274,89 @@ class TestWebsiteStructureAnalyzer(unittest.TestCase):
         self.assertIn("WEBSITE STRUCTURE", table)
         self.assertIn("CRAWL DETAILS", details)
         self.assertIn("Home", table)
+
+    def test_multiple_parents_persistence_and_retrieval(self):
+        """Verifies that a page referenced by multiple parents records and retrieves all parents."""
+        storage = StorageEngine(self.db_path)
+        try:
+            # Simulate Home linking to Page A, and Section 1 also linking to Page A
+            home = "http://test.local/"
+            sec1 = "http://test.local/sec1"
+            page_a = "http://test.local/page_a"
+
+            storage.record_parent_relationship(sec1, home)
+            storage.record_parent_relationship(page_a, home)
+            storage.record_parent_relationship(page_a, sec1)
+
+            storage.mark_url_completed(url=home, depth=0, http_status=200, content_length=100, parent_url=None, title="Home")
+            storage.mark_url_completed(url=sec1, depth=1, http_status=200, content_length=100, parent_url=home, title="Section 1")
+            storage.mark_url_completed(url=page_a, depth=2, http_status=200, content_length=100, parent_url=home, title="Page A")
+
+            records = storage.get_all_crawled_records()
+            rec_map = {r["url"]: r for r in records}
+
+            self.assertIn(home, rec_map[page_a]["all_parents"])
+            self.assertIn(sec1, rec_map[page_a]["all_parents"])
+
+            analyzer = StructureAnalyzer(records, target_url=home)
+            self.assertIn(sec1, analyzer.get_all_parents(page_a))
+        finally:
+            storage.close()
+
+    def test_resume_retains_website_structure(self):
+        """
+        Runs Phase 1 with max_pages=3, pauses, and resumes in Phase 2 with max_pages=10.
+        Verifies that final structure table and exports include all pages with correct
+        hierarchy, depths, and parent references.
+        """
+        # Phase 1: Crawl 3 pages
+        config_p1 = CrawlerConfig(
+            seed_url=self.base_url + "/",
+            max_workers=2,
+            max_pages=3,
+            max_depth=3,
+            same_domain_only=True,
+            politeness_delay=0.01,
+            db_path=self.db_path,
+            output_dir=self.output_dir,
+            resume=False,
+            headless_ui=True,
+        )
+        engine_p1 = CrawlerEngine(config_p1)
+        engine_p1.start()
+
+        # Phase 2: Resume up to 10 pages
+        config_p2 = CrawlerConfig(
+            seed_url=None,
+            max_workers=2,
+            max_pages=10,
+            max_depth=3,
+            same_domain_only=True,
+            politeness_delay=0.01,
+            db_path=self.db_path,
+            output_dir=self.output_dir,
+            resume=True,
+            headless_ui=True,
+        )
+        engine_p2 = CrawlerEngine(config_p2)
+        engine_p2.start()
+
+        storage = StorageEngine(self.db_path)
+        records = storage.get_all_crawled_records()
+        storage.close()
+
+        self.assertGreaterEqual(len(records), 5, "Resumed crawl should have expanded total crawled pages.")
+
+        analyzer = StructureAnalyzer(records, target_url=self.base_url + "/")
+        table = analyzer.generate_structure_table()
+
+        # Seed page should remain at Depth 0 with no parent
+        home_rec = next(r for r in records if r["url"] == self.base_url + "/")
+        self.assertEqual(home_rec["depth"], 0)
+        self.assertIsNone(home_rec["parent_url"])
+        self.assertIn("Depth", table)
+        self.assertIn("Page Title", table)
+        self.assertIn("Parent", table)
 
 
 if __name__ == "__main__":

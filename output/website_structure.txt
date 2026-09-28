@@ -1,18 +1,18 @@
-====================================================================================================
-                                         WEBSITE STRUCTURE                                          
-====================================================================================================
+===============================================================================================================
+                                               WEBSITE STRUCTURE                                               
+===============================================================================================================
 
-Depth | Page            | Parent          | Status      | HTTP | URL
-------+-----------------+-----------------+-------------+------+-----------------------------------------
-0     | Home            | —               | Completed   | 200  | http://127.0.0.1:49343/
-1     | Missing Page    | Home            | Failed      | 404  | http://127.0.0.1:49343/missing-page
-1     | Logo            | Home            | Failed      | 200  | http://127.0.0.1:49343/logo.png
-1     | Section2        | Home            | Completed   | 200  | http://127.0.0.1:49343/section2
-1     | Section3        | Home            | Completed   | 200  | http://127.0.0.1:49343/section3
-1     | Section1        | Home            | Completed   | 200  | http://127.0.0.1:49343/section1
-2     | Page2           | Section1        | Completed   | 200  | http://127.0.0.1:49343/section1/page2
-2     | Page1           | Section1        | Completed   | 200  | http://127.0.0.1:49343/section1/page1
-3     | Deep            | Page1           | Completed   | 200  | http://127.0.0.1:49343/section1/page1/deep
-2     | Cycle B         | Cycle A         | Completed   | 200  | http://127.0.0.1:49343/cycle_b
-3     | Cycle A         | Cycle B         | Completed   | 200  | http://127.0.0.1:49343/cycle_a
-====================================================================================================
+Depth | Page Title   | Parent   | Status    | HTTP | URL
+------+--------------+----------+-----------+------+-----------------------------------------------------------
+0     | Home         | —        | Completed | 200  | http://127.0.0.1:49269/
+1     | Missing Page | Home     | Failed    | 404  | http://127.0.0.1:49269/missing-page
+1     | Section1     | Home     | Completed | 200  | http://127.0.0.1:49269/section1
+2     | Page2        | Section1 | Completed | 200  | http://127.0.0.1:49269/section1/page2
+3     | Section2     | Page2    | Completed | 200  | http://127.0.0.1:49269/section2
+2     | Section3     | Section2 | Completed | 200  | http://127.0.0.1:49269/section3
+2     | Page1        | Section1 | Completed | 200  | http://127.0.0.1:49269/section1/page1
+3     | Deep         | Page1    | Completed | 200  | http://127.0.0.1:49269/section1/page1/deep
+1     | Cycle A      | Home     | Completed | 200  | http://127.0.0.1:49269/cycle_a
+2     | Cycle B      | Cycle A  | Completed | 200  | http://127.0.0.1:49269/cycle_b
+1     | Logo         | Home     | Failed    | 200  | http://127.0.0.1:49269/logo.png
+===============================================================================================================

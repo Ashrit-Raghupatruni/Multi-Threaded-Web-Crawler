@@ -188,6 +188,17 @@ class VisitedRegistry:
         with self._lock:
             return set(self._visited)
 
+    def record_parent(self, url: str, parent_url: Optional[str]) -> None:
+        """Thread-safely records an additional parent reference for an existing URL."""
+        if not parent_url:
+            return
+        with self._lock:
+            if url not in self._parent_map:
+                self._parent_map[url] = parent_url
+            parents_list = self._all_parents.setdefault(url, [])
+            if parent_url not in parents_list:
+                parents_list.append(parent_url)
+
     def get_parent(self, url: str) -> Optional[str]:
         """Returns the primary parent URL for the specified URL."""
         with self._lock:

@@ -1,75 +1,131 @@
 {
   "title": "Home",
-  "url": "http://127.0.0.1:49343/",
+  "url": "http://127.0.0.1:49269/",
   "depth": 0,
   "status": "Completed",
   "http_status": 200,
+  "all_parents": [
+    "http://127.0.0.1:49269/section1",
+    "http://127.0.0.1:49269/section3"
+  ],
   "children": [
     {
       "title": "Missing Page",
-      "url": "http://127.0.0.1:49343/missing-page",
+      "url": "http://127.0.0.1:49269/missing-page",
       "depth": 1,
       "status": "Failed",
       "http_status": 404,
-      "children": []
-    },
-    {
-      "title": "Logo",
-      "url": "http://127.0.0.1:49343/logo.png",
-      "depth": 1,
-      "status": "Failed",
-      "http_status": 200,
-      "children": []
-    },
-    {
-      "title": "Section2",
-      "url": "http://127.0.0.1:49343/section2",
-      "depth": 1,
-      "status": "Completed",
-      "http_status": 200,
-      "children": []
-    },
-    {
-      "title": "Section3",
-      "url": "http://127.0.0.1:49343/section3",
-      "depth": 1,
-      "status": "Completed",
-      "http_status": 200,
+      "all_parents": [
+        "http://127.0.0.1:49269/"
+      ],
       "children": []
     },
     {
       "title": "Section1",
-      "url": "http://127.0.0.1:49343/section1",
+      "url": "http://127.0.0.1:49269/section1",
       "depth": 1,
       "status": "Completed",
       "http_status": 200,
+      "all_parents": [
+        "http://127.0.0.1:49269/"
+      ],
       "children": [
         {
           "title": "Page2",
-          "url": "http://127.0.0.1:49343/section1/page2",
+          "url": "http://127.0.0.1:49269/section1/page2",
           "depth": 2,
           "status": "Completed",
           "http_status": 200,
-          "children": []
-        },
-        {
-          "title": "Page1",
-          "url": "http://127.0.0.1:49343/section1/page1",
-          "depth": 2,
-          "status": "Completed",
-          "http_status": 200,
+          "all_parents": [
+            "http://127.0.0.1:49269/section1"
+          ],
           "children": [
             {
-              "title": "Deep",
-              "url": "http://127.0.0.1:49343/section1/page1/deep",
+              "title": "Section2",
+              "url": "http://127.0.0.1:49269/section2",
               "depth": 3,
               "status": "Completed",
               "http_status": 200,
+              "all_parents": [
+                "http://127.0.0.1:49269/",
+                "http://127.0.0.1:49269/section1/page2"
+              ],
+              "children": [
+                {
+                  "title": "Section3",
+                  "url": "http://127.0.0.1:49269/section3",
+                  "depth": 2,
+                  "status": "Completed",
+                  "http_status": 200,
+                  "all_parents": [
+                    "http://127.0.0.1:49269/",
+                    "http://127.0.0.1:49269/section2"
+                  ],
+                  "children": []
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Page1",
+          "url": "http://127.0.0.1:49269/section1/page1",
+          "depth": 2,
+          "status": "Completed",
+          "http_status": 200,
+          "all_parents": [
+            "http://127.0.0.1:49269/section1"
+          ],
+          "children": [
+            {
+              "title": "Deep",
+              "url": "http://127.0.0.1:49269/section1/page1/deep",
+              "depth": 3,
+              "status": "Completed",
+              "http_status": 200,
+              "all_parents": [
+                "http://127.0.0.1:49269/section1/page1"
+              ],
               "children": []
             }
           ]
         }
       ]
+    },
+    {
+      "title": "Cycle A",
+      "url": "http://127.0.0.1:49269/cycle_a",
+      "depth": 1,
+      "status": "Completed",
+      "http_status": 200,
+      "all_parents": [
+        "http://127.0.0.1:49269/",
+        "http://127.0.0.1:49269/cycle_b"
+      ],
+      "children": [
+        {
+          "title": "Cycle B",
+          "url": "http://127.0.0.1:49269/cycle_b",
+          "depth": 2,
+          "status": "Completed",
+          "http_status": 200,
+          "all_parents": [
+            "http://127.0.0.1:49269/cycle_a"
+          ],
+          "children": []
+        }
+      ]
+    },
+    {
+      "title": "Logo",
+      "url": "http://127.0.0.1:49269/logo.png",
+      "depth": 1,
+      "status": "Failed",
+      "http_status": 200,
+      "all_parents": [
+        "http://127.0.0.1:49269/"
+      ],
+      "children": []
     }
   ]
 }

@@ -67,6 +67,15 @@ class StorageEngine:
                     ON pending_frontier (status, depth, discovered_at);
                 """)
 
+                # Table for tracking all parent-child link relationships (multiple parents)
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS page_parents (
+                        child_url TEXT,
+                        parent_url TEXT,
+                        PRIMARY KEY (child_url, parent_url)
+                    );
+                """)
+
                 # Schema migration check for existing databases
                 cursor.execute("PRAGMA table_info(crawled_urls);")
                 columns = {col[1] for col in cursor.fetchall()}
@@ -86,6 +95,21 @@ class StorageEngine:
                 if "parent_url" not in p_columns:
                     cursor.execute("ALTER TABLE pending_frontier ADD COLUMN parent_url TEXT;")
 
+                conn.commit()
+            finally:
+                conn.close()
+
+    def record_parent_relationship(self, child_url: str, parent_url: Optional[str]) -> None:
+        """Records a parent-child relationship (supports multiple parents per page)."""
+        if not parent_url or not child_url:
+            return
+        with self._lock:
+            conn = self._get_connection()
+            try:
+                conn.execute(
+                    "INSERT OR IGNORE INTO page_parents (child_url, parent_url) VALUES (?, ?);",
+                    (child_url, parent_url)
+                )
                 conn.commit()
             finally:
                 conn.close()
@@ -111,6 +135,13 @@ class StorageEngine:
                         parent_url = None
                     else:
                         url, depth, parent_url = item
+
+                    # Record parent-child relationship if parent is present
+                    if parent_url:
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO page_parents (child_url, parent_url)
+                            VALUES (?, ?);
+                        """, (url, parent_url))
 
                     # Check if already crawled
                     cursor.execute("SELECT 1 FROM crawled_urls WHERE url = ? LIMIT 1;", (url,))
@@ -226,16 +257,36 @@ class StorageEngine:
             finally:
                 conn.close()
 
+    def load_all_parents(self) -> Dict[str, List[str]]:
+        """Loads all discovered parent-child relationships from database."""
+        with self._lock:
+            conn = self._get_connection()
+            try:
+                cursor = conn.cursor()
+                cursor.execute("SELECT child_url, parent_url FROM page_parents;")
+                parents_map: Dict[str, List[str]] = {}
+                for c_url, p_url in cursor.fetchall():
+                    parents_map.setdefault(c_url, []).append(p_url)
+                return parents_map
+            finally:
+                conn.close()
+
     def get_all_crawled_records(self) -> List[Dict[str, Any]]:
         """
         Retrieves all crawled page records with complete parent, title, and telemetry metadata.
         Ordered hierarchically by depth and crawl time.
+        Attaches all known parent URLs (multiple parents) for each record.
         """
         with self._lock:
             conn = self._get_connection()
             conn.row_factory = sqlite3.Row
             try:
                 cursor = conn.cursor()
+                cursor.execute("SELECT child_url, parent_url FROM page_parents;")
+                parents_map: Dict[str, List[str]] = {}
+                for c_url, p_url in cursor.fetchall():
+                    parents_map.setdefault(c_url, []).append(p_url)
+
                 cursor.execute("""
                     SELECT
                         url, parent_url, title, depth, http_status,
@@ -244,7 +295,16 @@ class StorageEngine:
                     FROM crawled_urls
                     ORDER BY depth ASC, crawled_at ASC;
                 """)
-                return [dict(row) for row in cursor.fetchall()]
+                records = []
+                for row in cursor.fetchall():
+                    rec = dict(row)
+                    primary_p = rec.get("parent_url")
+                    p_list = list(parents_map.get(rec["url"], []))
+                    if primary_p and primary_p not in p_list:
+                        p_list.insert(0, primary_p)
+                    rec["all_parents"] = p_list
+                    records.append(rec)
+                return records
             finally:
                 conn.close()
 
