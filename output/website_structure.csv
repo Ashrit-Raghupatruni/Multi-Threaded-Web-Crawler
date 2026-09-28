@@ -1,0 +1,12 @@
+Depth,Page Title,Parent,URL,Status,HTTP Status Code
+0,Home,—,http://127.0.0.1:49343/,Completed,200
+1,Missing Page,Home,http://127.0.0.1:49343/missing-page,Failed,404
+1,Logo,Home,http://127.0.0.1:49343/logo.png,Failed,200
+1,Section2,Home,http://127.0.0.1:49343/section2,Completed,200
+1,Section3,Home,http://127.0.0.1:49343/section3,Completed,200
+1,Section1,Home,http://127.0.0.1:49343/section1,Completed,200
+2,Page2,Section1,http://127.0.0.1:49343/section1/page2,Completed,200
+2,Page1,Section1,http://127.0.0.1:49343/section1/page1,Completed,200
+3,Deep,Page1,http://127.0.0.1:49343/section1/page1/deep,Completed,200
+2,Cycle B,Cycle A,http://127.0.0.1:49343/cycle_b,Completed,200
+3,Cycle A,Cycle B,http://127.0.0.1:49343/cycle_a,Completed,200

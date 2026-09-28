@@ -1,0 +1,75 @@
+{
+  "title": "Home",
+  "url": "http://127.0.0.1:49343/",
+  "depth": 0,
+  "status": "Completed",
+  "http_status": 200,
+  "children": [
+    {
+      "title": "Missing Page",
+      "url": "http://127.0.0.1:49343/missing-page",
+      "depth": 1,
+      "status": "Failed",
+      "http_status": 404,
+      "children": []
+    },
+    {
+      "title": "Logo",
+      "url": "http://127.0.0.1:49343/logo.png",
+      "depth": 1,
+      "status": "Failed",
+      "http_status": 200,
+      "children": []
+    },
+    {
+      "title": "Section2",
+      "url": "http://127.0.0.1:49343/section2",
+      "depth": 1,
+      "status": "Completed",
+      "http_status": 200,
+      "children": []
+    },
+    {
+      "title": "Section3",
+      "url": "http://127.0.0.1:49343/section3",
+      "depth": 1,
+      "status": "Completed",
+      "http_status": 200,
+      "children": []
+    },
+    {
+      "title": "Section1",
+      "url": "http://127.0.0.1:49343/section1",
+      "depth": 1,
+      "status": "Completed",
+      "http_status": 200,
+      "children": [
+        {
+          "title": "Page2",
+          "url": "http://127.0.0.1:49343/section1/page2",
+          "depth": 2,
+          "status": "Completed",
+          "http_status": 200,
+          "children": []
+        },
+        {
+          "title": "Page1",
+          "url": "http://127.0.0.1:49343/section1/page1",
+          "depth": 2,
+          "status": "Completed",
+          "http_status": 200,
+          "children": [
+            {
+              "title": "Deep",
+              "url": "http://127.0.0.1:49343/section1/page1/deep",
+              "depth": 3,
+              "status": "Completed",
+              "http_status": 200,
+              "children": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

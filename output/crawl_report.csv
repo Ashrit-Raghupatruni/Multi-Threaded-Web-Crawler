@@ -1,0 +1,12 @@
+URL,Status,HTTP Code,Response Time,Links Found
+http://127.0.0.1:49343/,Completed,200,0.00s,7
+http://127.0.0.1:49343/missing-page,Failed,404,0.00s,0
+http://127.0.0.1:49343/logo.png,Failed,200,0.00s,0
+http://127.0.0.1:49343/section2,Completed,200,0.02s,1
+http://127.0.0.1:49343/section3,Completed,200,0.03s,1
+http://127.0.0.1:49343/section1,Completed,200,0.00s,3
+http://127.0.0.1:49343/section1/page2,Completed,200,0.02s,1
+http://127.0.0.1:49343/section1/page1,Completed,200,0.00s,1
+http://127.0.0.1:49343/cycle_b,Completed,200,0.00s,1
+http://127.0.0.1:49343/section1/page1/deep,Completed,200,0.02s,0
+http://127.0.0.1:49343/cycle_a,Completed,200,0.02s,1
